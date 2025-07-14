@@ -3,10 +3,16 @@
 import { revalidatePath } from "next/cache";
 import prisma from "@/lib/prisma";
 
-// Define el tipo para el estado que devuelven las acciones del formulario
+// Define el tipo para el estado que devuelven las acciones del formulario (crear/actualizar)
 type FormState = {
   message: string;
   status: "success" | "error" | "";
+};
+
+// Define el tipo para el retorno de las acciones de eliminación
+type DeleteActionReturn = {
+  message: string;
+  status: "success" | "error";
 };
 
 export async function getCategories() {
@@ -16,10 +22,13 @@ export async function getCategories() {
         nombre: "asc",
       },
     });
-    return { categories };
-  } catch (error) {
+    return { categories, error: null };
+  } catch (error: any) {
     console.error("Error fetching categories:", error);
-    return { error: "Failed to fetch categories." };
+    return {
+      categories: null,
+      error: `Error de base de datos al obtener categorías: ${error.message}`,
+    };
   }
 }
 
@@ -28,10 +37,13 @@ export async function getCategoryById(id: number) {
     const category = await prisma.categoria.findUnique({
       where: { id },
     });
-    return { category };
-  } catch (error) {
+    return { category, error: null };
+  } catch (error: any) {
     console.error(`Error fetching category with ID ${id}:`, error);
-    return { error: "Failed to fetch category." };
+    return {
+      category: null,
+      error: `Error de base de datos al obtener categoría ${id}: ${error.message}`,
+    };
   }
 }
 
@@ -58,9 +70,12 @@ export async function createCategory(
     });
     revalidatePath("/categorias");
     return { message: "Categoría creada exitosamente.", status: "success" };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error creating category:", error);
-    return { message: "Error al crear la categoría.", status: "error" };
+    return {
+      message: `Error al crear la categoría: ${error.message || error}`,
+      status: "error",
+    };
   }
 }
 
@@ -92,13 +107,17 @@ export async function updateCategory(
       message: "Categoría actualizada exitosamente.",
       status: "success",
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error(`Error updating category with ID ${id}:`, error);
-    return { message: "Error al actualizar la categoría.", status: "error" };
+    return {
+      message: `Error al actualizar la categoría: ${error.message || error}`,
+      status: "error",
+    };
   }
 }
 
-export async function deleteCategory(id: number) {
+export async function deleteCategory(id: number): Promise<DeleteActionReturn> {
+  // <-- ¡Aquí el cambio!
   try {
     // Check if there are products associated with this category
     const productsCount = await prisma.producto.count({
@@ -118,8 +137,11 @@ export async function deleteCategory(id: number) {
     });
     revalidatePath("/categorias");
     return { message: "Categoría eliminada exitosamente.", status: "success" };
-  } catch (error) {
+  } catch (error: any) {
     console.error(`Error deleting category with ID ${id}:`, error);
-    return { message: "Error al eliminar la categoría.", status: "error" };
+    return {
+      message: `Error al eliminar la categoría: ${error.message || error}`,
+      status: "error",
+    };
   }
 }

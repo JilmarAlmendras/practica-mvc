@@ -17,8 +17,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { getProducts, deleteProduct } from "@/actions/products";
-import { Trash2, Pencil } from "lucide-react";
-import { revalidatePath } from "next/cache";
+import { Pencil } from "lucide-react";
+import { DeleteConfirmationDialog } from "@/components/delete-confirmation-dialog"; // Importar el nuevo componente
 
 export default async function ProductsPage() {
   const { products, error } = await getProducts();
@@ -40,24 +40,16 @@ export default async function ProductsPage() {
             npx prisma migrate dev --name init
           </code>
           <br />
-          También revisa tu archivo <code className="font-mono">.env</code> para
-          la variable <code className="font-mono">DATABASE_URL</code>.
+          También revisa tu archivo <code className="font-mono">.env</code> en
+          la raíz de tu proyecto para la variable{" "}
+          <code className="font-mono">DATABASE_URL</code>.
         </p>
       </div>
     );
   }
 
-  const handleDelete = async (id: number) => {
-    "use server";
-    const { message, status } = await deleteProduct(id);
-    revalidatePath("/productos");
-    console.log(`Delete status: ${status}, message: ${message}`);
-    // En una aplicación real, aquí podrías usar un toast del lado del cliente
-    // para mostrar el mensaje de éxito/error de la eliminación.
-  };
-
   return (
-    <div className="grid gap-6 pt-4">
+    <div className="grid gap-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Productos</h1>
         <Button asChild>
@@ -112,16 +104,12 @@ export default async function ProductsPage() {
                             <span className="sr-only">Editar</span>
                           </Link>
                         </Button>
-                        <form action={handleDelete.bind(null, product.id)}>
-                          <Button
-                            variant="destructive"
-                            size="icon"
-                            type="submit"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                            <span className="sr-only">Eliminar</span>
-                          </Button>
-                        </form>
+                        {/* Usar el nuevo componente de confirmación */}
+                        <DeleteConfirmationDialog
+                          id={product.id}
+                          name={product.nombre}
+                          deleteAction={deleteProduct}
+                        />
                       </div>
                     </TableCell>
                   </TableRow>

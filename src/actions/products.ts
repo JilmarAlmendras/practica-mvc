@@ -3,10 +3,16 @@
 import { revalidatePath } from "next/cache";
 import prisma from "@/lib/prisma";
 
-// Define el tipo para el estado que devuelven las acciones del formulario
+// Define el tipo para el estado que devuelven las acciones del formulario (crear/actualizar)
 type FormState = {
   message: string;
   status: "success" | "error" | "";
+};
+
+// Define el tipo para el retorno de las acciones de eliminación
+type DeleteActionReturn = {
+  message: string;
+  status: "success" | "error";
 };
 
 export async function getProducts() {
@@ -19,10 +25,13 @@ export async function getProducts() {
         nombre: "asc",
       },
     });
-    return { products };
-  } catch (error) {
+    return { products, error: null };
+  } catch (error: any) {
     console.error("Error fetching products:", error);
-    return { error: "Failed to fetch products." };
+    return {
+      products: null,
+      error: `Error de base de datos al obtener productos: ${error.message}`,
+    };
   }
 }
 
@@ -34,10 +43,13 @@ export async function getProductById(id: number) {
         categoria: true,
       },
     });
-    return { product };
-  } catch (error) {
+    return { product, error: null };
+  } catch (error: any) {
     console.error(`Error fetching product with ID ${id}:`, error);
-    return { error: "Failed to fetch product." };
+    return {
+      product: null,
+      error: `Error de base de datos al obtener producto ${id}: ${error.message}`,
+    };
   }
 }
 
@@ -80,9 +92,12 @@ export async function createProduct(
     });
     revalidatePath("/productos");
     return { message: "Producto creado exitosamente.", status: "success" };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error creating product:", error);
-    return { message: "Error al crear el producto.", status: "error" };
+    return {
+      message: `Error al crear el producto: ${error.message || error}`,
+      status: "error",
+    };
   }
 }
 
@@ -128,21 +143,28 @@ export async function updateProduct(
     });
     revalidatePath("/productos");
     return { message: "Producto actualizado exitosamente.", status: "success" };
-  } catch (error) {
+  } catch (error: any) {
     console.error(`Error updating product with ID ${id}:`, error);
-    return { message: "Error al actualizar el producto.", status: "error" };
+    return {
+      message: `Error al actualizar el producto: ${error.message || error}`,
+      status: "error",
+    };
   }
 }
 
-export async function deleteProduct(id: number) {
+export async function deleteProduct(id: number): Promise<DeleteActionReturn> {
+  // <-- ¡Aquí el cambio!
   try {
     await prisma.producto.delete({
       where: { id },
     });
     revalidatePath("/productos");
     return { message: "Producto eliminado exitosamente.", status: "success" };
-  } catch (error) {
+  } catch (error: any) {
     console.error(`Error deleting product with ID ${id}:`, error);
-    return { message: "Error al eliminar el producto.", status: "error" };
+    return {
+      message: `Error al eliminar el producto: ${error.message || error}`,
+      status: "error",
+    };
   }
 }
