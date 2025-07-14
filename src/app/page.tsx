@@ -1,5 +1,5 @@
-function HomePage() {
-  return <div>HomePage</div>;
-}
+import { redirect } from "next/navigation";
 
-export default HomePage;
+export default function HomePage() {
+  redirect("/productos");
+}
