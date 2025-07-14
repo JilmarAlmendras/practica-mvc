@@ -11,7 +11,7 @@ export function MainNav() {
       </Link>
       <h1 className="font-bold text-2xl pl-2">Practica MVC</h1>
       <nav className="ml-auto flex items-center gap-4 sm:gap-6">
-        <Link
+        {/* <Link
           href="/productos"
           className="text-sm font-medium hover:underline underline-offset-4"
         >
@@ -22,7 +22,7 @@ export function MainNav() {
           className="text-sm font-medium hover:underline underline-offset-4"
         >
           Categorías
-        </Link>
+        </Link> */}
 
         <ModeToggle />
       </nav>
